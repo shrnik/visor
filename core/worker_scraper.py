@@ -8,10 +8,10 @@ from PIL import Image
 from core.queue_config import download_queue, processing_queue
 import re
 
-BASE_URL = "https://metobs.ssec.wisc.edu/pub/cache/aoss/cameras/east/img/"
+BASE_URL = "https://metobs.ssec.wisc.edu/pub/cache/aoss/cameras/west/img/"
 
-def get_day_url(date: datetime) -> str:
-    date_str = date.strftime("%Y/%m/%d")
+
+def get_day_url(date_str: str) -> str:
     print(f"Fetching images for date: {date_str}")
     return urljoin(BASE_URL, f"{date_str}/orig/")
 
@@ -21,12 +21,12 @@ def extract_timestamp_from_url(url) -> datetime:
         return datetime.strptime(timestamp_match.group(0), '%y_%m_%d')
     return None
 
-def scrape_image_links(date: datetime,):
+def scrape_image_links(date_str:str):
     try:
-        base_url = get_day_url(date)
-        response = requests.get(base_url, timeout=120)
+        url = get_day_url(date_str)
+        print(f"Scraping {url}")
+        response = requests.get(url, timeout=120)
         response.raise_for_status()
-        
         soup = BeautifulSoup(response.content, 'html.parser')
         image_links = []
         
@@ -37,24 +37,24 @@ def scrape_image_links(date: datetime,):
                 image_pattern = r'(\d{2}_\d{2}_\d{2}\.trig\+00\.jpg)'
                 if not re.match(image_pattern, href):
                     continue
-                full_url = urljoin(base_url, href)
+                full_url = urljoin(url, href)
                 timestamp = extract_timestamp_from_url(full_url)
                 image_links.append({
                     'url': full_url,
                     'filename': href,
-                    'date': date.strftime("%Y/%m/%d"),
+                    'date': date_str,
                     'timestamp': timestamp
                 })
         # take every 6th image
         image_links = image_links[::6]
         # save links to a file
-        with open(f"image_links_{date.strftime('%Y_%m_%d')}.txt", 'w') as f:
-            for link in image_links:
-                f.write(f"{link['url']}\n")
+        # with open(f"image_links_{date.strftime('%Y_%m_%d')}.txt", 'w') as f:
+        #     for link in image_links:
+        #         f.write(f"{link['url']}\n")
         print(f"Found {len(image_links)} images")
         return image_links
     except Exception as e:
-        print(f"Error scraping {base_url}: {e}")
+        print(f"Error scraping {url}: {e}")
         return []
 
 def download_image(image_data):
@@ -65,7 +65,7 @@ def download_image(image_data):
         
         os.makedirs('downloaded_images', exist_ok=True)
         # folder structure: downloaded_images/YYYY_MM_DD/
-        date_folder = os.path.join('downloaded_images', date.replace('/', '_'))
+        date_folder = os.path.join('downloaded_images/west', date.replace('/', '_'))
         os.makedirs(date_folder, exist_ok=True)
         local_path = os.path.join(date_folder, filename)
 
@@ -81,30 +81,35 @@ def download_image(image_data):
             }
         print(f"calling image {filename} from {url}")
         
-        try :
-
-            response = requests.get(url, timeout=60)
-            response.raise_for_status()
-            print(f"writing image {filename} from {url}")
-            with open(local_path, 'wb') as f:
-                f.write(response.content)
-        except Exception as e:
-            print(f"Error downloading image {filename} from {url}: {e}")
-            raise e
         try:
-            with Image.open(local_path) as img:
-                img.verify()
+            img_pil = Image.open(requests.get(url, stream=True).raw)
+            img_rgb = img_pil.convert('RGB')
+            # reaize to 384x384
+            img_resized = img_rgb.resize((384, 384))
+            img_resized.save(local_path)
+
+            print(f"Processed and saved image to {local_path}, removed original")
+
+            return {
+                'success': True,
+                'local_path': local_path,
+                'url': url,
+                'filename': filename,
+                'already_existed': False,
+                'processed': True
+                }
         except Exception as e:
-            os.remove(local_path)
-            raise Exception(f"Downloaded file is not a valid image: {e}")
-        print (f"Downloaded image {filename} to {local_path}")
-        return {
-            'success': True,
-            'local_path': local_path,
-            'url': url,
-            'filename': filename,
-            'already_existed': False
-        }
+            print(f"Error processing image {filename}: {e}")
+            # If processing fails, keep the original
+            print(f"Downloaded image {filename} to {local_path}")
+            return {
+                'success': True,
+                'local_path': local_path,
+                'url': url,
+                'filename': filename,
+                'already_existed': False,
+                'processed': False
+            }
         
     except Exception as e:
         print(f"Error downloading {image_data.get('url', 'unknown')}: {e}")

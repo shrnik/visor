@@ -2,6 +2,7 @@ import argparse
 from datetime import datetime
 import sys
 import os
+import pandas as pd
 from rq import SpawnWorker, Worker
 from core.queue_config import download_queue, processing_queue, insertion_queue, redis_conn
 from core.worker_scraper import scrape_and_enqueue_images
@@ -12,10 +13,13 @@ os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 
 def start_scraper():
     print("Starting image scraping and download process...")
-    date = "2025/09/01"  # Use 2025/09/01 date for scraping
-
-    count = scrape_and_enqueue_images(datetime.strptime(date, "%Y/%m/%d"))
-    print(f"Enqueued {count} images for download")
+    startDate = "2025/01/01"
+    endDate = "2025/01/31"  # Use 2025/09/01 date for scraping
+    for date in pd.date_range(startDate, endDate):
+        date_str = date.strftime("%Y/%m/%d")
+        print(f"Scraping images for date: {date_str}")
+        count = scrape_and_enqueue_images(date_str)
+        print(f"Enqueued {count} images for download")
 
 def start_download_worker():
     print("Starting download worker...")
