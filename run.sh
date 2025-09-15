@@ -12,7 +12,7 @@
 #SBATCH --mail-type=ALL
 
 # half hour timelimit
-#SBATCH -t 24:00:00
+#SBATCH -t 1:00:00
 
 module load python3/3.12.9
 
