@@ -80,35 +80,21 @@ def download_image(image_data):
                 'already_existed': True
             }
         print(f"calling image {filename} from {url}")
-        
-        try:
-            img_pil = Image.open(requests.get(url, stream=True).raw)
-            img_rgb = img_pil.convert('RGB')
-            # reaize to 384x384
-            img_resized = img_rgb.resize((384, 384))
-            img_resized.save(local_path)
+        img_pil = Image.open(requests.get(url, stream=True).raw)
+        # img_rgb = img_pil.convert('RGB')
+        # # reaize to 384x384
+        # img_resized = img_rgb.resize((384, 384))
+        img_pil.save(local_path)
 
-            print(f"Processed and saved image to {local_path}, removed original")
+        print(f"Processed and saved image to {local_path}, removed original")
 
-            return {
-                'success': True,
-                'local_path': local_path,
-                'url': url,
-                'filename': filename,
-                'already_existed': False,
-                'processed': True
-                }
-        except Exception as e:
-            print(f"Error processing image {filename}: {e}")
-            # If processing fails, keep the original
-            print(f"Downloaded image {filename} to {local_path}")
-            return {
-                'success': True,
-                'local_path': local_path,
-                'url': url,
-                'filename': filename,
-                'already_existed': False,
-                'processed': False
+        return {
+            'success': True,
+            'local_path': local_path,
+            'url': url,
+            'filename': filename,
+            'already_existed': False,
+            'processed': True
             }
         
     except Exception as e:
