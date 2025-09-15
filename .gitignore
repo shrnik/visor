@@ -1,0 +1,9 @@
+# .gitignore
+__pycache__/
+*.pyc
+.env
+*.env
+*.sqlite3
+dinov3/
+chroma-data
+downloaded_images/
