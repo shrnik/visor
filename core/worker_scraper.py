@@ -122,17 +122,17 @@ def download_and_process_image(image_data, timeout=300):
     try: 
         result = download_image(image_data)
         
-        if result['success']:
-            processing_job = processing_queue.enqueue(
-                'core.worker_processor.process_image_embedding',
-                result,
-                timeout=600
-            )
-            print(f"Image {result['filename']} downloaded, enqueued for processing: {processing_job.id}")
-            return result
-        else:
-            print(f"Failed to download {image_data.get('filename', 'unknown')}: {result.get('error')}")
-            return result
+        # if result['success']:
+        #     processing_job = processing_queue.enqueue(
+        #         'core.worker_processor.process_image_embedding',
+        #         result,
+        #         timeout=600
+        #     )
+        #     print(f"Image {result['filename']} downloaded, enqueued for processing: {processing_job.id}")
+        #     return result
+        # else:
+        #     print(f"Failed to download {image_data.get('filename', 'unknown')}: {result.get('error')}")
+        #     return result
     except Exception as e:
         print(f"Error in download_and_process_image for {image_data.get('filename', 'unknown')}: {e}")
         raise e
