@@ -3,6 +3,7 @@ from datetime import datetime
 import sys
 import os
 import pandas as pd
+from worker_scraper import scrape_and_download_images
 
 # Fix for macOS forking issue
 os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
