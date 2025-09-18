@@ -10,6 +10,7 @@ def getFolderList(baseDir):
         fullPath = os.path.join(baseDir, entry)
         if os.path.isdir(fullPath):
             folderList.append(fullPath)
+            folderList.sort()
     return folderList
 
 def process_folders(folders):
