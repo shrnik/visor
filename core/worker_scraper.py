@@ -5,7 +5,6 @@ from urllib.parse import urljoin, urlparse
 from datetime import datetime, timedelta
 import time
 from PIL import Image
-from core.queue_config import download_queue, processing_queue
 import re
 
 BASE_URL = "https://metobs.ssec.wisc.edu/pub/cache/aoss/cameras/west/img/"
@@ -105,37 +104,21 @@ def download_image(image_data):
             'url': image_data.get('url', 'unknown')
         }
 
-def scrape_and_enqueue_images(date):
+def scrape_and_download_images(date, concurrent=10):
     print("Starting image scraping...")
     image_links = scrape_image_links(date)
     
     print(f"Found {len(image_links)} images to process")
-    
-    for image_data in image_links:
-        job = download_queue.enqueue(download_and_process_image, image_data, timeout=300)
-        print(f"Enqueued download job {job.id} for {image_data['filename']}")
+    # download image links concurrently multithreaded
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    with ThreadPoolExecutor(max_workers=concurrent) as executor:
+        future_to_url = {executor.submit(download_image, img): img for img in image_links}
+        for future in as_completed(future_to_url):
+            img = future_to_url[future]
+            try:
+                data = future.result()
+                print(f"Downloaded {data.get('filename', 'unknown')}, success: {data.get('success', False)}")
+            except Exception as e:
+                print(f"Error downloading {img.get('url', 'unknown')}: {e}")
     
     return len(image_links)
-
-def download_and_process_image(image_data, timeout=300):
-    print(f"Downloading image {image_data['filename']} from {image_data['url']}")
-    try: 
-        result = download_image(image_data)
-        
-        # if result['success']:
-        #     processing_job = processing_queue.enqueue(
-        #         'core.worker_processor.process_image_embedding',
-        #         result,
-        #         timeout=600
-        #     )
-        #     print(f"Image {result['filename']} downloaded, enqueued for processing: {processing_job.id}")
-        #     return result
-        # else:
-        #     print(f"Failed to download {image_data.get('filename', 'unknown')}: {result.get('error')}")
-        #     return result
-    except Exception as e:
-        print(f"Error in download_and_process_image for {image_data.get('filename', 'unknown')}: {e}")
-        raise e
-
-if __name__ == "__main__":
-    scrape_and_enqueue_images()

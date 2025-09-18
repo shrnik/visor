@@ -13,12 +13,12 @@ os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 
 def start_scraper():
     print("Starting image scraping and download process...")
-    startDate = "2025/01/01"
-    endDate = "2025/01/31"  # Use 2025/09/01 date for scraping
+    startDate = "2025/01/28"
+    endDate = "2025/06/30"  # Use 2025/09/01 date for scraping
     for date in pd.date_range(startDate, endDate):
         date_str = date.strftime("%Y/%m/%d")
         print(f"Scraping images for date: {date_str}")
-        count = scrape_and_enqueue_images(date_str)
+        count = scrape_and_download_images(date_str)
         print(f"Enqueued {count} images for download")
 
 def start_download_worker():
