@@ -11,7 +11,7 @@ from transformers import AutoModel, AutoProcessor
 # -----------------------------
 # Configurable parameters
 # -----------------------------
-MODEL_NAME = "openai/clip-vit-base-patch32"  # or any Hugging Face vision model
+MODEL_NAME = "google/siglip2-base-patch16-384"  # or any Hugging Face vision model
 BATCH_SIZE = 8
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -32,6 +32,7 @@ def extract_datetime(folder: str, filename: str) -> str:
 
 def process_folder(folder: str):
     files = sorted([f for f in os.listdir(folder) if f.lower().endswith(".jpg")])
+    print(f"Found {len(files)} images in {folder}")
     hdf5_path = folder.rstrip("/") + "_embeddings.h5"
 
     with h5py.File(hdf5_path, "w") as h5f:
@@ -43,11 +44,9 @@ def process_folder(folder: str):
             inputs = processor(images=images, return_tensors="pt").to(device)
 
             with torch.no_grad():
-                outputs = model(**inputs)
-                if hasattr(outputs, "image_embeds"):
-                    embeddings = outputs.image_embeds.cpu().numpy()
-                else:
-                    embeddings = outputs.last_hidden_state.mean(1).cpu().numpy()
+                outputs = model.get_image_features(**inputs)
+                outputs_features = outputs / outputs.norm(p=2, dim=-1, keepdim=True)
+                embeddings = outputs_features.cpu().numpy()
 
             # Store each embedding with filename and full datetime stamp
             for fname, emb in zip(batch_files, embeddings):
