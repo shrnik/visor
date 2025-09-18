@@ -11,7 +11,7 @@ from transformers import AutoModel, AutoProcessor
 # -----------------------------
 # Configurable parameters
 # -----------------------------
-MODEL_NAME = "google/siglip2-base-patch16-384"  # or any Hugging Face vision model
+MODEL_NAME = "openai/clip-vit-base-patch32"  # or any Hugging Face vision model
 BATCH_SIZE = 8
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
