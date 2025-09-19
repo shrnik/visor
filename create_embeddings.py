@@ -48,10 +48,12 @@ def extract_datetime(folder: str, filename: str) -> str:
     time_part = match.group(1) if match else "00_00_00"
     return f"{date_part} {time_part}"
 
+def get_hdf5_path(folder: str) -> str:
+    return folder.rstrip("/") + "_embeddings.h5"
 def process_folder(folder: str):
     files = sorted([f for f in os.listdir(folder) if f.lower().endswith(".jpg")])
     print(f"Found {len(files)} images in {folder}")
-    hdf5_path = folder.rstrip("/") + "_embeddings.h5"
+    hdf5_path = get_hdf5_path(folder)
     if check_if_embeddings_exist(hdf5_path) and check_hdf5_file(hdf5_path, folder):
         print(f"✅ Embeddings already exist and are valid at {hdf5_path}. Skipping...")
         return
@@ -85,7 +87,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     if args.test_hdf5:
-        result = check_hdf5_file(args.test_hdf5, args.folder)
-        print(f"HDF5 file '{args.test_hdf5}' is valid: {result}")
+        hdf_path = get_hdf5_path(args.folder)
+        if not os.path.exists(hdf_path):
+            print(f"HDF5 file '{hdf_path}' does not exist.")
+            exit(1)
+        result = check_hdf5_file(hdf_path, args.folder)
+        print(f"HDF5 file '{hdf_path}' is valid: {result}")
     else:
         process_folder(args.folder)
