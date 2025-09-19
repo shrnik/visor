@@ -15,9 +15,27 @@ MODEL_NAME = "openai/clip-vit-base-patch32"  # or any Hugging Face vision model
 BATCH_SIZE = 8
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+print(f"CUDA available: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    print(f"CUDA device count: {torch.cuda.device_count()}")
+    print(f"Device name: {torch.cuda.get_device_name()}")
+
 model = AutoModel.from_pretrained(MODEL_NAME).to(device)
 model.eval()
 processor = AutoProcessor.from_pretrained(MODEL_NAME)
+
+def check_if_embeddings_exist(hdf5_path: str) -> bool:
+    return os.path.exists(hdf5_path)
+
+def check_hdf5_file(hdf5_path: str, folder: str) -> bool:
+    # len of embeddings should match number of images
+    if not os.path.exists(hdf5_path):
+        return False
+    with h5py.File(hdf5_path, "r") as h5f:
+        num_embeddings = len(h5f.keys())
+    num_images = len([f for f in os.listdir(folder) if f.lower().endswith(".jpg")])
+    return num_embeddings == num_images
 
 def extract_datetime(folder: str, filename: str) -> str:
     """
@@ -34,6 +52,9 @@ def process_folder(folder: str):
     files = sorted([f for f in os.listdir(folder) if f.lower().endswith(".jpg")])
     print(f"Found {len(files)} images in {folder}")
     hdf5_path = folder.rstrip("/") + "_embeddings.h5"
+    if check_if_embeddings_exist(hdf5_path) and check_hdf5_file(hdf5_path, folder):
+        print(f"✅ Embeddings already exist and are valid at {hdf5_path}. Skipping...")
+        return
 
     with h5py.File(hdf5_path, "w") as h5f:
         for i in tqdm(range(0, len(files), BATCH_SIZE), desc=f"Processing {folder}"):
@@ -60,5 +81,11 @@ def process_folder(folder: str):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--folder", required=True)
+    parser.add_argument("--test-hdf5", help="Test HDF5 file validation")
     args = parser.parse_args()
-    process_folder(args.folder)
+    
+    if args.test_hdf5:
+        result = check_hdf5_file(args.test_hdf5, args.folder)
+        print(f"HDF5 file '{args.test_hdf5}' is valid: {result}")
+    else:
+        process_folder(args.folder)
