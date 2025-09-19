@@ -21,23 +21,17 @@ if __name__ == "__main__":
     import os
 
     argparser = argparse.ArgumentParser()
-    # argparser.add_argument("--node", type=int, required=True, help="Node number (1-3)")
+    argparser.add_argument("--node", type=int, required=True, help="Node number (0-2)", default=0)
     argparser.add_argument("--base_dir", type=str, required=True, help="Base directory containing folders")
-    argparser.add_argument("--start", type=int, default=0, help="Start index for folder processing")
     start = argparser.parse_args().start
-    # Nth = argparser.parse_args().node
-    # if Nth < 1 or Nth > 3:
-    #     raise ValueError("Node number must be between 1 and 3")
-    # baseDir = argparser.parse_args().base_dir
-    # if not os.path.isdir(baseDir):
-    #     raise ValueError(f"Base directory {baseDir} does not exist or is not a directory")
-    # allFolders = getFolderList(baseDir)
-    # assignedFolders = [folder for i, folder in enumerate(allFolders) if (i % 3) + 1 == Nth]
-    # print(f"Node {Nth} processing {len(assignedFolders)} folders out of {len(allFolders)} total folders.")
-    # process_folders(assignedFolders)
-    # print(f"Node {Nth} completed processing assigned folders.")
-
-    folders = getFolderList(argparser.parse_args().base_dir)
-    folders = folders[start:]
-    print(f"Processing {len(folders)} folders in base directory {argparser.parse_args().base_dir}")
-    process_folders(folders)    
+    Nth = argparser.parse_args().node
+    if Nth < 0 or Nth > 2:
+        raise ValueError("Node number must be between 0 and 2")
+    baseDir = argparser.parse_args().base_dir
+    if not os.path.isdir(baseDir):
+        raise ValueError(f"Base directory {baseDir} does not exist or is not a directory")
+    allFolders = getFolderList(baseDir)
+    assignedFolders = [folder for i, folder in enumerate(allFolders) if (i % 3) == Nth]
+    print(f"Node {Nth} processing {len(assignedFolders)} folders out of {len(allFolders)} total folders.")
+    process_folders(assignedFolders)
+    print(f"Node {Nth} completed processing assigned folders.") 
