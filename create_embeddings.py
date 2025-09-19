@@ -57,7 +57,7 @@ def process_folder(folder: str):
     if check_if_embeddings_exist(hdf5_path) and check_hdf5_file(hdf5_path, folder):
         print(f"✅ Embeddings already exist and are valid at {hdf5_path}. Skipping...")
         return
-
+    print(f"Processing images and saving embeddings to {hdf5_path}...")
     with h5py.File(hdf5_path, "w") as h5f:
         for i in tqdm(range(0, len(files), BATCH_SIZE), desc=f"Processing {folder}"):
             batch_files = files[i:i + BATCH_SIZE]
