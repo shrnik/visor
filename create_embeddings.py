@@ -65,11 +65,18 @@ def process_folder(folder: str):
 
             # Preprocess and move to GPU
             inputs = processor(images=images, return_tensors="pt").to(device)
+            
+            if torch.cuda.is_available():
+                print(f"GPU memory allocated: {torch.cuda.memory_allocated() / 1024**2:.1f} MB")
+                print(f"GPU memory reserved: {torch.cuda.memory_reserved() / 1024**2:.1f} MB")
 
             with torch.no_grad():
                 outputs = model.get_image_features(**inputs)
                 outputs_features = outputs / outputs.norm(p=2, dim=-1, keepdim=True)
                 embeddings = outputs_features.cpu().numpy()
+                
+            if torch.cuda.is_available():
+                print(f"After processing - GPU memory allocated: {torch.cuda.memory_allocated() / 1024**2:.1f} MB")
 
             # Store each embedding with filename and full datetime stamp
             for fname, emb in zip(batch_files, embeddings):
