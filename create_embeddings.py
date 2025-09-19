@@ -32,12 +32,12 @@ def check_hdf5_file(hdf5_path: str, folder: str) -> bool:
     # len of embeddings should match number of images
     if not os.path.exists(hdf5_path):
         return False
-    try {
+    try :
         with h5py.File(hdf5_path, "r") as h5f:
             num_embeddings = len(h5f.keys())
             num_images = len([f for f in os.listdir(folder) if f.lower().endswith(".jpg")])
             return num_embeddings == num_images
-    } except Exception as e {
+    except Exception as e:
         print(f"Error reading HDF5 file {hdf5_path}: {e}")
         return False
     
