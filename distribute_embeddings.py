@@ -23,7 +23,6 @@ if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
     argparser.add_argument("--node", type=int, required=True, help="Node number (0-2)", default=0)
     argparser.add_argument("--base_dir", type=str, required=True, help="Base directory containing folders")
-    start = argparser.parse_args().start
     Nth = argparser.parse_args().node
     if Nth < 0 or Nth > 2:
         raise ValueError("Node number must be between 0 and 2")
